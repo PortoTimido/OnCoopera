@@ -1,0 +1,9 @@
+[submodule "OnCoopera-Backend"]
+	path = OnCoopera-Backend
+	url = https://github.com/PortoTimido/OnCoopera-Backend.git
+[submodule "OnCoopera-Backoffice"]
+	path = OnCoopera-Backoffice
+	url = https://github.com/PortoTimido/OnCoopera-Backoffice.git
+[submodule "OnCoopera-Mobile"]
+	path = OnCoopera-Mobile
+	url = https://github.com/PortoTimido/OnCoopera-Mobile.git
