@@ -1,0 +1,73 @@
+version: '3.8'
+
+services:
+
+  db:
+    image: postgis/postgis:15-3.4
+    container_name: oncoopera_db
+    restart: always
+    environment:
+      POSTGRES_USER: docker
+      POSTGRES_PASSWORD: docker
+    ports:
+      - "5432:5432"
+    volumes:
+      - oncoopera_pgdata:/var/lib/postgresql/data
+      - ./init-databases.sql:/docker-entrypoint-initdb.d/init-databases.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U docker -d oncoopera"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  
+  backend:
+    build:
+      context: ./OnCoopera-Backend
+      dockerfile: Dockerfile.dev
+    container_name: oncoopera_backend
+    ports:
+      - "3333:3333"
+    depends_on:
+      - db
+    environment:
+      DATABASE_URL: "postgresql://docker:docker@db:5432/oncoopera?schema=public"
+      TEST_DATABASE_URL: "postgresql://docker:docker@db:5432/oncoopera_test?schema=public"
+    volumes:
+      - ./OnCoopera-Backend:/usr/src/app
+      - /usr/src/app/node_modules
+    command: npm run start:dev
+
+  
+  backoffice:
+    build:
+      context: ./OnCoopera-Backoffice
+      dockerfile: Dockerfile.dev
+    container_name: oncoopera_backoffice
+    ports:
+      - "5173:5173"
+    environment:
+      VITE_API_URL: "http://localhost:3333"
+    volumes:
+      - ./OnCoopera-Backoffice:/usr/src/app
+      - /usr/src/app/node_modules
+    command: npm run dev -- --host 
+
+
+  mobile:
+    build:
+      context: ./OnCoopera-Mobile
+      dockerfile: Dockerfile.dev
+    container_name: oncoopera_mobile
+    ports:
+      - "8081:8081"
+    environment:
+      REACT_NATIVE_PACKAGER_HOSTNAME: "SEU_IP_LOCAL"
+      EXPO_USE_FAST_RESOLVER: "true"
+    volumes:
+      - ./OnCoopera-Mobile:/usr/src/app
+      - /usr/src/app/node_modules
+    command: npm start -- -c
+
+volumes:
+  oncoopera_pgdata:
