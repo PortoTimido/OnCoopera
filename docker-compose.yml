@@ -31,8 +31,9 @@ services:
 
 
   minio:
-    image: minio/minio
+    image: oncoopera-minio:latest
     container_name: oncoopera-minio
+    pull_policy: never
     restart: unless-stopped
 
     command: server /data --console-address ":9001"
@@ -43,6 +44,9 @@ services:
 
     volumes:
       - minio_data:/data
+
+    ports:
+      - "127.0.0.1:9000:9000"
 
     networks:
       - oncoopera-network
@@ -98,9 +102,9 @@ services:
       PASSWORD_RECOVERY_RATE_LIMIT_MAX_REQUESTS: ${PASSWORD_RECOVERY_RATE_LIMIT_MAX_REQUESTS:-5}
       TEMPORARY_PASSWORD_TTL_HOURS: ${TEMPORARY_PASSWORD_TTL_HOURS:-24}
 
-      MINIO_ENDPOINT: minio
-      MINIO_PORT: 9000
-      MINIO_USE_SSL: "false"
+      MINIO_ENDPOINT: ${MINIO_ENDPOINT}
+      MINIO_PORT: ${MINIO_PORT}
+      MINIO_USE_SSL: ${MINIO_USE_SSL}
       MINIO_ACCESS_KEY: ${MINIO_ROOT_USER}
       MINIO_SECRET_KEY: ${MINIO_ROOT_PASSWORD}
       MINIO_BUCKET: ${MINIO_BUCKET:-oncoopera-images}
@@ -126,12 +130,18 @@ services:
       context: ./OnCoopera-Backoffice
       args:
         VITE_API_BASE_URL: /api
+        VITE_GOOGLE_MAPS_API_KEY: ${VITE_GOOGLE_MAPS_API_KEY}
+        VITE_GOOGLE_PLACES_API_KEY: ${VITE_GOOGLE_PLACES_API_KEY}
 
     container_name: oncoopera-web
     restart: unless-stopped
 
     depends_on:
       - api
+
+    environment:
+      VITE_GOOGLE_MAPS_API_KEY: ${VITE_GOOGLE_MAPS_API_KEY}
+      VITE_GOOGLE_PLACES_API_KEY: ${VITE_GOOGLE_PLACES_API_KEY}
 
     ports:
       - "127.0.0.1:8080:80"
